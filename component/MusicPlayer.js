@@ -7,21 +7,46 @@ import {
   TouchableOpacity,
   Image,
   Text,
+  FlatList
   } from 'react-native'
+import songs from '../model/Data'
 import Slider from '@react-native-community/slider'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
 let {width, height} = Dimensions.get('window')
 
 const MusicPlayer = () => {
+
+  let renderSongs = ({item, index}) => {
+    return (
+      <View
+        style={{
+          width: width,
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
+        <View style={styles.artworkWrapper}>
+          <Image
+            style={styles.artworkImg}
+            source={item.image} />
+        </View>
+      </View>
+    )
+  }
  return (
   <SafeAreaView style={styles.container}>
     <View style={styles.mainContainer}>
-      <View style={styles.artworkWrapper}>
-        <Image
-          style={styles.artworkImg}
-          source={require('../assets/artwork/img-1.jpg')} />
-      </View>
+      <FlatList
+        data={songs}
+        renderItem={renderSongs}
+        keyExtractor={(item) => item.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+      />
+
       <View>
         <Text style={styles.title}>
           Song Title
@@ -29,7 +54,38 @@ const MusicPlayer = () => {
         <Text style={styles.artist}>
           Song Artist
         </Text>
-        <Slider/>
+        <View>
+          <Slider
+            value= {10}
+            minimumValue= {0}
+            maximumValue= {100}
+            style={styles.progressContainer}
+            thumbTintColor= '#fff369'
+            minimumTrackTintColor= '#fff369'
+            maximumTrackTintColor= '#fff'
+            onSlidingComplete={() => {}}
+          />
+          <View style={styles.progressLabelContainer}>
+            <Text style={styles.progressLabelText}>
+              0:00
+            </Text>
+            <Text style={styles.progressLabelText}>
+              3:56
+            </Text>
+          </View>
+        </View>
+          <View style={styles.musicControls}>
+            <TouchableOpacity>
+              <Ionicons name='play-skip-back-outline' size={35} color='#fff369' style={{marginTop:20}}/> 
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Ionicons name='ios-pause-circle' size={75} color='#fff369'/> 
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Ionicons name='play-skip-forward-outline' size={35} color='#fff369' style={{marginTop:20}}/> 
+            </TouchableOpacity>
+          </View>
+        
       </View>
     </View>
     <View style={styles.bottomContainer} >
@@ -105,7 +161,24 @@ let styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '200',
     textAlign: 'center'
+  },
+  progressContainer: {
+    width: 350,
+    height: 40,
+    flexDirection: 'row',
+    marginTop: 25
+  },
+  progressLabelContainer: {
+    width: 340,
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  progressLabelText: {
+    color: '#fff'
+  },
+  musicControls: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 15,
   }
 })
-
-

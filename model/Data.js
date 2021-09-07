@@ -30,3 +30,5 @@ let songs = [
   id: '5'
  },
 ]
+
+export default songs

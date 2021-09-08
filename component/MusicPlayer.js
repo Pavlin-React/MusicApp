@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useState, useRef, useEffect} from 'react'
 import { 
   View,
   Dimensions,
@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   Image,
   Text,
-  FlatList
+  FlatList,
+  Animated
   } from 'react-native'
 import songs from '../model/Data'
 import Slider from '@react-native-community/slider'
@@ -17,9 +18,22 @@ let {width, height} = Dimensions.get('window')
 
 const MusicPlayer = () => {
 
+  let scrollX = useRef(new Animated.Value(0)).current
+  let [songIndex, setSongIndex] = useState(0)
+
+  useEffect(() => {
+    scrollX.addListener(({value}) => {
+      console.log('scrollX', scrollX);
+      console.log('Device width', width);
+      let index = Math.round( value / width)
+      setSongIndex(index)
+      console.log('Index', index);
+    })
+  }, [])
+
   let renderSongs = ({item, index}) => {
     return (
-      <View
+      <Animated.View
         style={{
           width: width,
           justifyContent: 'center',
@@ -31,13 +45,13 @@ const MusicPlayer = () => {
             style={styles.artworkImg}
             source={item.image} />
         </View>
-      </View>
+      </Animated.View>
     )
   }
  return (
   <SafeAreaView style={styles.container}>
     <View style={styles.mainContainer}>
-      <FlatList
+      <Animated.FlatList
         data={songs}
         renderItem={renderSongs}
         keyExtractor={(item) => item.id}
@@ -45,14 +59,22 @@ const MusicPlayer = () => {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{nativeEvent: {
+            contentOffset: {
+              x: scrollX
+            }
+          }}],
+          {useNativeDriver: true}
+        )}
       />
 
       <View>
         <Text style={styles.title}>
-          Song Title
+          {songs[songIndex].title}
         </Text>
         <Text style={styles.artist}>
-          Song Artist
+          {songs[songIndex].artist}
         </Text>
         <View>
           <Slider

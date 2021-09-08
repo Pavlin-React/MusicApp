@@ -21,15 +21,32 @@ const MusicPlayer = () => {
   let scrollX = useRef(new Animated.Value(0)).current
   let [songIndex, setSongIndex] = useState(0)
 
+  let songSlider = useRef(null)
+
   useEffect(() => {
     scrollX.addListener(({value}) => {
-      console.log('scrollX', scrollX);
-      console.log('Device width', width);
+      // console.log('scrollX', scrollX);
+      // console.log('Device width', width);
       let index = Math.round( value / width)
       setSongIndex(index)
-      console.log('Index', index);
+      // console.log('Index', index);
     })
+    return () => {
+      scrollX.removeAllListeners()
+    }
+    
   }, [])
+
+  let skipToNext = () => {
+    songSlider.current.scrollToOffset({
+      offset: (songIndex + 1) * width
+    })
+  }
+  let skipToPrevious = () => {
+    songSlider.current.scrollToOffset({
+      offset: (songIndex - 1) * width
+    })
+  }
 
   let renderSongs = ({item, index}) => {
     return (
@@ -51,7 +68,9 @@ const MusicPlayer = () => {
  return (
   <SafeAreaView style={styles.container}>
     <View style={styles.mainContainer}>
+      <View style={{width: width}}>
       <Animated.FlatList
+        ref={songSlider}
         data={songs}
         renderItem={renderSongs}
         keyExtractor={(item) => item.id}
@@ -68,6 +87,7 @@ const MusicPlayer = () => {
           {useNativeDriver: true}
         )}
       />
+      </View>
 
       <View>
         <Text style={styles.title}>
@@ -97,13 +117,13 @@ const MusicPlayer = () => {
           </View>
         </View>
           <View style={styles.musicControls}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={skipToPrevious}>
               <Ionicons name='play-skip-back-outline' size={35} color='#fff369' style={{marginTop:20}}/> 
             </TouchableOpacity>
             <TouchableOpacity>
               <Ionicons name='ios-pause-circle' size={75} color='#fff369'/> 
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={skipToNext}>
               <Ionicons name='play-skip-forward-outline' size={35} color='#fff369' style={{marginTop:20}}/> 
             </TouchableOpacity>
           </View>

@@ -20,6 +20,7 @@ import
     State,
     usePlaybackState,
     useProgress,
+    useTrackPlayerEvents,
   }
 from 'react-native-track-player'
 import songs from '../model/Data'
@@ -51,11 +52,26 @@ const MusicPlayer = () => {
   let playbackState = usePlaybackState()
   let progress = useProgress()
 
+  let [trackArtwork, setTrackArtwork] = useState()
+  let [trackArtist, setTrackArtist] = useState()
+  let [trackTitle, setTrackTitle] = useState()
+
   let scrollX = useRef(new Animated.Value(0)).current
   let [songIndex, setSongIndex] = useState(0)
   let [repeatMode, setRepeatMode] = useState('off')
 
   let songSlider = useRef(null)
+
+  useTrackPlayerEvents([Event.PlaybackTrackChanged], async event => {
+    if (event.type == Event.PlaybackTrackChanged && event.nextTrack !== null) {
+      let track = await TrackPlayer.getTrack(event.nextTrack)
+      let {title, artwork, artist} = track
+      setTrackTitle(title)
+      setTrackArtist(artist)
+      setTrackArtwork(artwork)
+    }
+  }) 
+    
 
   let repeatIcon = () => {
     if ( repeatMode == 'off') {

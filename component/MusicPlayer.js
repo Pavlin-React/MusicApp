@@ -10,24 +10,93 @@ import {
   FlatList,
   Animated
   } from 'react-native'
+
+import
+  TrackPlayer, 
+  {
+    Capability,
+    Event,
+    RepeatMode,
+    State,
+    usePlaybackState,
+    useProgress,
+  }
+from 'react-native-track-player'
 import songs from '../model/Data'
 import Slider from '@react-native-community/slider'
 import Ionicons from 'react-native-vector-icons/Ionicons'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 
 let {width, height} = Dimensions.get('window')
 
+let setupPlayer = async()=> {
+  await TrackPlayer.setupPlayer()
+  await TrackPlayer.add(songs)
+}
+
+let togglePlayback = async(playbackState) => {
+  let currentTrack = await TrackPlayer.getCurrentTrack()
+
+  if (currentTrack !== null) {
+    if (playbackState == State.Paused) {
+      await TrackPlayer.play()
+    } else {
+      await TrackPlayer.pause()
+    }
+  }
+}
+
 const MusicPlayer = () => {
+
+  let playbackState = usePlaybackState()
+  let progress = useProgress()
 
   let scrollX = useRef(new Animated.Value(0)).current
   let [songIndex, setSongIndex] = useState(0)
+  let [repeatMode, setRepeatMode] = useState('off')
 
   let songSlider = useRef(null)
 
+  let repeatIcon = () => {
+    if ( repeatMode == 'off') {
+      return 'repeat-off'
+    }
+    if (repeatMode == 'track') {
+      return 'repeat-once'
+    }
+    if (repeatMode == 'repeat') {
+      return 'repeat'
+    } 
+  }
+
+  let changeRepeatMode = () => {
+    if (repeatMode == 'off') {
+      TrackPlayer.setRepeatMode(RepeatMode.Track)
+      setRepeatMode('track')
+    }
+    if (repeatMode == 'track') {
+      TrackPlayer.setRepeatMode(RepeatMode.Queue)
+      setRepeatMode('repeat')
+    }
+    if (repeatMode == 'repeat') {
+      TrackPlayer.setRepeatMode(RepeatMode.Off)
+      setRepeatMode('off')
+    }
+  }
+
+  let skipTo = async(trackId) => {
+    await TrackPlayer.skip(trackId)
+  }
+
   useEffect(() => {
+
+    setupPlayer()
     scrollX.addListener(({value}) => {
       // console.log('scrollX', scrollX);
       // console.log('Device width', width);
       let index = Math.round( value / width)
+
+      skipTo(index)
       setSongIndex(index)
       // console.log('Index', index);
     })
@@ -98,21 +167,23 @@ const MusicPlayer = () => {
         </Text>
         <View>
           <Slider
-            value= {10}
+            value= {progress.position}
             minimumValue= {0}
-            maximumValue= {100}
+            maximumValue= {progress.duration}
             style={styles.progressContainer}
             thumbTintColor= '#fff369'
             minimumTrackTintColor= '#fff369'
             maximumTrackTintColor= '#fff'
-            onSlidingComplete={() => {}}
+            onSlidingComplete={() => {async(value) => {
+              await TrackPlayer.seekTo(value)
+            }}}
           />
           <View style={styles.progressLabelContainer}>
             <Text style={styles.progressLabelText}>
-              0:00
+              {new Date(progress.position * 1000).toISOString().substr(14, 5)}
             </Text>
             <Text style={styles.progressLabelText}>
-              3:56
+              {new Date((progress.duration - progress.position) * 1000).toISOString().substr(14, 5)}
             </Text>
           </View>
         </View>
@@ -120,8 +191,8 @@ const MusicPlayer = () => {
             <TouchableOpacity onPress={skipToPrevious}>
               <Ionicons name='play-skip-back-outline' size={35} color='#fff369' style={{marginTop:20}}/> 
             </TouchableOpacity>
-            <TouchableOpacity>
-              <Ionicons name='ios-pause-circle' size={75} color='#fff369'/> 
+            <TouchableOpacity onPress={() => togglePlayback(playbackState)}>
+              <Ionicons name= {playbackState == State.Playing ? 'ios-pause-circle' : 'ios-play-circle'} size={75} color='#fff369'/> 
             </TouchableOpacity>
             <TouchableOpacity onPress={skipToNext}>
               <Ionicons name='play-skip-forward-outline' size={35} color='#fff369' style={{marginTop:20}}/> 
@@ -135,8 +206,8 @@ const MusicPlayer = () => {
      <TouchableOpacity>
       <Ionicons name='heart-outline' size={30} color='#777777'/> 
      </TouchableOpacity>
-     <TouchableOpacity>
-      <Ionicons name='repeat' size={30} color='#777777'/> 
+     <TouchableOpacity onPress={changeRepeatMode}>
+      <MaterialCommunityIcons name={repeatIcon()}size={30} color={repeatMode !== 'off' ? '#fff369' : '#777777'}/> 
      </TouchableOpacity>
      <TouchableOpacity>
       <Ionicons name='share-outline' size={30} color='#777777'/> 
